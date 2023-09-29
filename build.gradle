@@ -2,6 +2,10 @@ plugins {
     id 'java'
 }
 
+if(JavaVersion.current() != JavaVersion.VERSION_17){
+    throw new GradleException("This build must be run with java 17")
+}
+
 group = 'org.study'
 version = '1.0-SNAPSHOT'
 
@@ -16,4 +20,10 @@ dependencies {
 
 test {
     useJUnitPlatform()
+}
+
+tasks.register('run', JavaExec) {
+    standardInput = System.in
+    mainClass = 'org.study.Main'
+    classpath = sourceSets.main.runtimeClasspath
 }
