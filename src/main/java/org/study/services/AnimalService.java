@@ -3,8 +3,13 @@ import static org.study.services.enums.AnimalCSVHeaders.AGE;
 import static org.study.services.enums.AnimalCSVHeaders.ID;
 import static org.study.services.enums.AnimalCSVHeaders.NAME;
 
+import java.io.EOFException;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -308,6 +313,124 @@ public class AnimalService {
 
         // Check if any vaccines were loaded.
         return countOfVaccines > 0;
+    }
+
+    public void saveAnimalsToBinaryFile(String filePath) throws IOException {
+
+        //Saves the animals to a binary file
+        //Returns true if the animals were saved successfully, false otherwise
+
+        File file = new File(filePath);
+
+
+        FileOutputStream fos = new FileOutputStream(file);
+        ObjectOutputStream oos = new ObjectOutputStream(fos);
+        for (Animal animal : animalList) {
+            oos.writeObject(animal);
+        }
+
+        oos.close();
+        fos.close();
+
+
+    }
+
+    /**
+     * Loads animals from a binary file by deserializing objects.
+     *
+     * @param filePath The path to the binary file containing serialized animal objects.
+     * @throws IOException            If an I/O error occurs while reading the file.
+     * @throws ClassNotFoundException If the class of a serialized object cannot be found.
+     */
+    public void loadAnimalsFromBinaryFile(String filePath) throws IOException, ClassNotFoundException {
+        // Create a file object representing the binary file to be read.
+        File file = new File(filePath);
+
+        // Create a FileInputStream to read from the binary file.
+        FileInputStream fis = new FileInputStream(file);
+
+        // Create an ObjectInputStream to deserialize objects from the FileInputStream.
+        ObjectInputStream ois = new ObjectInputStream(fis);
+
+        // Clear the existing list of animals to load new ones.
+        this.animalList.clear();
+
+        try {
+            // Continuously read objects from the file until the end is reached (EOFException).
+            while (true) {
+                // Read the next object from the file (an Animal object) and cast it.
+                Animal animal = (Animal) ois.readObject();
+
+                // Add the loaded animal to the animal list.
+                this.animalList.add(animal);
+            }
+        } catch (EOFException e) {
+            // This exception is expected when the end of the file is reached.
+            // It indicates that all objects have been successfully loaded.
+        } finally {
+            // Close the ObjectInputStream and FileInputStream.
+            ois.close();
+            fis.close();
+        }
+    }
+
+    /**
+     * Loads animals from a binary file by deserializing the list of animals.
+     *
+     * @param filePath The path to the binary file containing the list of animals.
+     * @throws IOException If an I/O error occurs while reading the file.
+     * @throws ClassNotFoundException If the class of the serialized object cannot be found.
+     */
+    public void loadAnimalsFromBinaryFileUsingTheEntireList(String filePath)
+        throws IOException, ClassNotFoundException {
+        // Create a file object representing the binary file to be read.
+        File file = new File(filePath);
+
+        // Create a FileInputStream to read from the binary file.
+        FileInputStream fis = new FileInputStream(file);
+
+        // Create an ObjectInputStream to deserialize the list of animals.
+        ObjectInputStream ois = new ObjectInputStream(fis);
+
+        try {
+            // Read the list of animals from the file.
+            @SuppressWarnings("unchecked") // Suppress unchecked cast warning
+            List<Animal> loadedAnimals = (ArrayList<Animal>) ois.readObject();
+
+            // Replace the existing list with the loaded list.
+            this.animalList.clear();
+            this.animalList.addAll(loadedAnimals);
+        } finally {
+            // Close the ObjectInputStream and FileInputStream.
+            ois.close();
+            fis.close();
+        }
+    }
+
+    /**
+     * Saves the list of animals to a binary file.
+     *
+     * @param filePath The path to the binary file where the list of animals will be saved.
+     * @throws IOException If an I/O error occurs while writing the file.
+     */
+    public void saveAnimalsToBinaryFileUsingTheEntireList(String filePath) throws IOException {
+        // Create a file object representing the binary file to be written.
+        File file = new File(filePath);
+
+        // Create a FileOutputStream to write to the binary file.
+        FileOutputStream fos = new FileOutputStream(file);
+
+        // Create an ObjectOutputStream to serialize the list of animals.
+        ObjectOutputStream oos = new ObjectOutputStream(fos);
+
+        try {
+            // Write the list of animals to the file.
+            oos.writeObject(this.animalList);
+        } finally {
+            // Close the ObjectOutputStream and FileOutputStream.
+            oos.close();
+            fos.close();
+        }
     }
 
 }

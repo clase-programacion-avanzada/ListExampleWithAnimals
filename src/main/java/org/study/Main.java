@@ -11,8 +11,9 @@ public class Main {
     private static final String DEFAULT_DELIMITER = ";";
     private static final String YES = "y";
     private static final String ANIMALS_CSV_DEFAULT_PATH = "src/main/resources/animals.csv";
-    private static final String VACCINES_CSV_DEFAULT_PATH = "src/main/resources/vaccines.csv";
+    private static final String ANIMALS_BIN_DEFAULT_PATH = "src/main/resources/animals.bin";
 
+    private static final String VACCINES_CSV_DEFAULT_PATH = "src/main/resources/vaccines.csv";
     public static void main(String[] args) {
 
         // Initialize a scanner for user input and an AnimalService instance
@@ -25,12 +26,14 @@ public class Main {
         do {
             //Reference: https://docs.oracle.com/en/java/javase/17/text-blocks/index.html
             System.out.println("""
+                    0. Load animals from binary file
                     1. Add animal
                     2. Add vaccine to animal
                     3. Load animals and vaccines from CSV
                     4. Print report of unique brands
                     5. Print report of animal vaccines
                     6. Print report of animals pending on nextApplication
+                    7. Save animals to binary file
                     8. Exit
                     Please enter your option
                     """);
@@ -45,12 +48,14 @@ public class Main {
             //Reference: https://docs.oracle.com/javase/tutorial/java/nutsandbolts/switch.html
             //Reference: https://medium.com/@javatechie/the-evolution-of-switch-statement-from-java-7-to-java-17-4b5eee8d29b7
             switch(option) {
+                case 0 -> loadAnimalsFromBinaryFile(scanner, animalService); // Option 0: Load animals from binary file
                 case 1 -> createNewAnimal(scanner, animalService); // Option 1: Add a new animal
                 case 2 -> addVaccineToAnimal(scanner, animalService); // Option 2: Add a vaccine to an animal
                 case 3 -> loadAnimalsAndVaccinesFromCSV(scanner, animalService); // Option 3: Load animals and vaccines from CSV
                 case 4 -> printReportOfUniqueBrands(animalService); // Option 4: Print a report of unique brands
                 case 5 -> printReportOfAnimalVaccines(animalService); // Option 5: Print a report of animal vaccines
                 case 6 -> printReportOfAnimalsPendingOnNextApplication(animalService); // Option 6: Print a report of animals pending on next application
+                case 7 -> saveAnimalsToBinaryFile(scanner, animalService); // Option 7: Save animals to binary file
                 case 8 -> System.out.println("Bye"); // Option 8: Exit the program
                 default -> System.out.println("Invalid option"); // Invalid option
             }
@@ -58,6 +63,54 @@ public class Main {
 
         // Close the scanner when done
         scanner.close();
+    }
+
+    private static void saveAnimalsToBinaryFile(Scanner scanner, AnimalService animalService) {
+
+        System.out.println("Do you want to save animals to binary file? (y/n)");
+        String saveAnimals = scanner.nextLine();
+
+        if(! saveAnimals.equalsIgnoreCase(YES)) {
+            System.out.println("Going back to main menu");
+        }
+
+        System.out.println("Please enter the path of the binary file");
+        String path = getPath(scanner, ANIMALS_BIN_DEFAULT_PATH);
+
+        try{
+            // Attempt to save animals to the specified binary file
+            animalService.saveAnimalsToBinaryFileUsingTheEntireList(path);
+
+            System.out.println("Animals saved successfully");
+
+        } catch (IOException e) {
+            System.out.println("Error saving animals due to error: " + e.getMessage());
+        }
+
+
+    }
+
+    private static void loadAnimalsFromBinaryFile(Scanner scanner, AnimalService animalService) {
+
+        System.out.println("Do you want to load animals from binary file? (y/n)");
+        String loadAnimals = scanner.nextLine();
+
+        if(! loadAnimals.equalsIgnoreCase(YES)) {
+            System.out.println("Going back to main menu");
+        }
+
+        System.out.println("Please enter the path of the binary file");
+        String path = getPath(scanner, ANIMALS_BIN_DEFAULT_PATH);
+
+        try{
+            // Attempt to load animals from the specified binary file
+            animalService.loadAnimalsFromBinaryFileUsingTheEntireList(path);
+
+            System.out.println("Animals loaded successfully");
+
+        } catch (IOException | ClassNotFoundException e) {
+            System.out.println("Error loading animals due to error: " + e.getMessage());
+        }
     }
 
     // Helper method to load animals and vaccines from CSV
@@ -165,7 +218,7 @@ public class Main {
         System.out.println("Please enter the name of the animal to add the vaccine");
         String nameOfAnimal = scanner.nextLine();
         System.out.println("Please enter the volume of the vaccine");
-        int volume = Integer.valueOf(scanner.nextLine());
+        int volume = Integer.parseInt(scanner.nextLine());
         System.out.println("Please enter the brand of the vaccine");
         String brand = scanner.nextLine();
         animalService.addVaccine(nameOfAnimal, volume, brand);

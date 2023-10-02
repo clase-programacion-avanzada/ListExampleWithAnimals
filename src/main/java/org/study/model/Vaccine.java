@@ -1,5 +1,6 @@
 package org.study.model;
 
+import java.io.Serializable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -9,7 +10,8 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.UUID;
 
-public class Vaccine {
+public class Vaccine implements Serializable {
+
 
     private UUID id;
     private int volumeInMl;
