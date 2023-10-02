@@ -41,6 +41,8 @@ Follow these steps to get started with the Animal Management Program:
 
 The program provides the following features through a menu-driven interface:
 
+0. **Load Animals from Binary FIle:** Load animal data from a binary file.
+
 1. **Add Animal:** Allows you to add a new animal with a name and age.
 
 2. **Add Vaccine to Animal:** Lets you add a vaccine to an existing animal by specifying the name, volume, and brand of the vaccine.
@@ -53,7 +55,9 @@ The program provides the following features through a menu-driven interface:
 
 6. **Print Report of Animals Pending on Next Application:** Generate a report of animals pending their next vaccine application.
 
-7. **Exit:** Exit the program.
+7. **Save Animals to Binary File:** Save animal data to a binary file.
+
+8. **Exit:** Exit the program.
 
 ## Usage Instructions
 

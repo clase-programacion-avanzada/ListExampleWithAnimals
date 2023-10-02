@@ -70,7 +70,7 @@ public class Main {
         System.out.println("Do you want to save animals to binary file? (y/n)");
         String saveAnimals = scanner.nextLine();
 
-        if(! saveAnimals.equalsIgnoreCase(YES)) {
+        if(!saveAnimals.equalsIgnoreCase(YES)) {
             System.out.println("Going back to main menu");
         }
 
@@ -92,7 +92,10 @@ public class Main {
 
     private static void loadAnimalsFromBinaryFile(Scanner scanner, AnimalService animalService) {
 
-        System.out.println("Do you want to load animals from binary file? (y/n)");
+        System.out.println("""
+              Do you want to load animals from binary file? (y/n)
+              THIS OPERATION WILL OVERWRITE THE CURRENT LIST OF ANIMALS 
+              """);
         String loadAnimals = scanner.nextLine();
 
         if(! loadAnimals.equalsIgnoreCase(YES)) {
@@ -158,11 +161,11 @@ public class Main {
 
     // Helper method to get the file path for CSV files
     private static String getPath(Scanner scanner, String defaultPath) {
-        System.out.println("Load using default path? (y/n)" + defaultPath + " is the default");
+        System.out.println("Load using default path? (y/n) " + defaultPath + " is the default");
         String useDefaultPath = scanner.nextLine();
 
         if(!useDefaultPath.equalsIgnoreCase(YES)) {
-            System.out.println("Please enter the path of the CSV file");
+            System.out.println("Please enter the path of the file");
         }
 
         return useDefaultPath.equalsIgnoreCase(YES)
