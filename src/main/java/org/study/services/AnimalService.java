@@ -1,23 +1,15 @@
 package org.study.services;
-import static org.study.services.enums.AnimalCSVHeaders.AGE;
-import static org.study.services.enums.AnimalCSVHeaders.ID;
-import static org.study.services.enums.AnimalCSVHeaders.NAME;
 
-import java.io.EOFException;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import org.study.exceptions.NotFoundException;
 import org.study.model.Animal;
 import org.study.model.Vaccine;
-import org.study.services.enums.AnimalCSVHeaders;
-import org.study.services.enums.VaccineCSVHeaders;
 
 
 public class AnimalService {
@@ -27,6 +19,7 @@ public class AnimalService {
     public AnimalService() {
 
         this.animalList = new ArrayList<>();
+
     }
 
     /**
@@ -35,13 +28,14 @@ public class AnimalService {
      * @param name The name of the animal.
      * @param age  The age of the animal.
      */
-    public void addAnimal(String name, int age) {
+    public void addAnimalToDatabase(String name, int age) {
         // Create a new Animal object with the given name and age.
         Animal animal = new Animal(name, age);
 
         // Add the newly created animal to the animal list.
         this.animalList.add(animal);
     }
+
 
     /**
      * Adds a vaccine to an animal with the specified name.
@@ -64,11 +58,18 @@ public class AnimalService {
      * you can modify the respective methods without affecting the other parts of the code that use these methods.
      * This separation of concerns reduces code complexity and helps avoid unintended side effects when making changes.
      */
-    public void addVaccine(String nameOfAnimal, int volume, String brand) {
+    public void addVaccineToAnimal(String nameOfAnimal, int volume, String brand)
+        throws NotFoundException {
         // This is implying that the name of the animal is unique.
 
         // Step 1: Find the animal by name using the findAnimalByName method.
+
         Animal animalToAddVaccine = findAnimalByName(nameOfAnimal);
+
+        if (animalToAddVaccine == null) {
+            // The animal was not found.
+            throw new NotFoundException(String.format("Animal with name %s not found", nameOfAnimal));
+        }
 
         // Step 2: Add the vaccine to the found animal.
         animalToAddVaccine.addVaccine(volume, brand);
@@ -98,6 +99,44 @@ public class AnimalService {
     }
 
 
+    private Animal findAnimalByNameUsingStreams(String nameOfAnimal) throws NotFoundException {
+        return animalList.stream()
+            .filter(animal -> animal.getName().equals(nameOfAnimal))
+            .findFirst()
+            .orElseThrow(
+                () -> new NotFoundException(
+                    String.format("Animal with name %s not found", nameOfAnimal)));
+    }
+
+    private List<String> findAnimalsByName(String nameOfAnimal) {
+        List<String> animalsFound = new ArrayList<>();
+
+        for (Animal animal : animalList) {
+            if (animal.getName().equalsIgnoreCase(nameOfAnimal)) {
+                animalsFound.add(animal.getName());
+            }
+        }
+
+        return animalsFound;
+    }
+
+    private List<String> findAnimalsByNameUsingStreams(String nameOfAnimal) {
+        return animalList.stream()
+            .filter(animal -> animal.getName().equalsIgnoreCase(nameOfAnimal))
+            .map(Animal::getName)
+            .toList();
+    }
+
+    /*This method returns a map with the animal ids and their owner ids set:
+    * i.e {animalId1: {ownerId1, ownerId2}, animalId2: {ownerId1, ownerId3}}
+    * */
+    private Map<UUID, Set<UUID>> findAnimalOwnersByName(String nameOfAnimal) {
+        return animalList.stream()
+            .filter(animal -> animal.getName().equalsIgnoreCase(nameOfAnimal))
+            .collect(Collectors.toMap(Animal::getId, Animal::getOwnerIds));
+    }
+
+
     /**
      * Searches for an animal by its unique ID.
      *
@@ -109,9 +148,9 @@ public class AnimalService {
      *
      * Reference: https://www.baeldung.com/java-optional
      */
-    private Animal findAnimalById(String id) {
+    public Animal findAnimalById(UUID id) {
         for (Animal animal : animalList) {
-            if (animal.getId().toString().equals(id)) {
+            if (animal.getId().equals(id)) {
                 return animal;
             }
         }
@@ -236,201 +275,185 @@ public class AnimalService {
     }
 
 
-    /**
-     * Loads animal data from a CSV file with the specified format.
-     *
-     * @param path      The file path to the CSV file containing animal data.
-     * @param delimiter The delimiter used in the CSV file to separate values.
-     * @return True if animals were loaded successfully, false otherwise.
-     * @throws IOException If an I/O error occurs while reading the file.
-     */
-    public boolean loadAnimalsFromCSVFile(String path, String delimiter) throws IOException {
-        File file = new File(path);
-
-        // Reference: https://funnelgarden.com/java_read_file/#1b_FilesreadAllLines_Explicit_Encoding
-        List<String> lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
-
-        // Store the current size of animalList before adding new animals.
-        int sizeBeforeAdding = this.animalList.size();
-
-        // Iterate through each line in the CSV file and parse animal data.
-        for (String line : lines) {
-            // Split the line into values using the specified delimiter.
-            String[] values = line.split(delimiter);
-
-            // Extract animal data from the CSV line.
-            String id = values[AnimalCSVHeaders.ID.getIndex()];
-            String name = values[AnimalCSVHeaders.NAME.getIndex()];
-            int age = Integer.valueOf(values[AnimalCSVHeaders.AGE.getIndex()]);
-
-            // Create an Animal object and add it to the animalList.
-            Animal animal = new Animal(id, name, age);
-            this.animalList.add(animal);
-        }
-
-        // Check if new animals were added by comparing the list size before and after loading.
-        return animalList.size() > sizeBeforeAdding;
-    }
-
 
     /**
      * Loads vaccine data from a CSV file with the specified format.
      *
      * @param path      The file path to the CSV file containing vaccine data.
      * @param delimiter The delimiter used in the CSV file to separate values.
+     * @param fileService The FileService object used to read the file.
      * @return True if vaccines were loaded successfully, false otherwise.
      * @throws IOException If an I/O error occurs while reading the file.
      */
-    public boolean loadVaccinesFromCSVFile(String path, String delimiter) throws IOException {
-        File file = new File(path);
+    public boolean loadVaccinesFromCSVFile(String path,
+                                           String delimiter,
+                                           FileService fileService)
+        throws IOException, NotFoundException {
 
-        // Reference: https://funnelgarden.com/java_read_file/#1b_FilesreadAllLines_Explicit_Encoding
-        List<String> lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
+        Map<UUID, List<Vaccine>> vaccinesByAnimalId =
+            fileService.loadVaccinesFromCSVFile(path, delimiter);
 
-        int countOfVaccines = 0;
+        // search animal by id and add vaccines to the animal
+        for (Map.Entry<UUID, List<Vaccine>> entry : vaccinesByAnimalId.entrySet()) {
+            Animal animal = findAnimalById(entry.getKey());
 
-        // Iterate through each line in the CSV file and parse vaccine data.
-        for (String line : lines) {
-            // Split the line into values using the specified delimiter.
-            String[] values = line.split(delimiter);
+            if (animal == null) {
+                throw new NotFoundException(String.format("Error while assigning vaccines to animal: " +
+                    "Animal with id %s not found", entry.getKey()));
+            }
 
-            // Extract vaccine data from the CSV line.
-            String id = values[VaccineCSVHeaders.ID.getIndex()];
-            int volume = Integer.valueOf(values[VaccineCSVHeaders.VOLUME.getIndex()]);
-            String brand = values[VaccineCSVHeaders.BRAND.getIndex()];
-            String dateOfApplication = values[VaccineCSVHeaders.DATE_OF_APPLICATION.getIndex()];
-            String animalId = values[VaccineCSVHeaders.ANIMAL_ID.getIndex()];
+            boolean vaccineAdded = animal.addVaccines(entry.getValue());
 
-            // Find the corresponding animal by ID.
-            Animal animal = findAnimalById(animalId);
-
-            // Add the vaccine to the found animal.
-            animal.addVaccine(id, volume, brand, dateOfApplication);
-
-            // Increment the count of loaded vaccines.
-            countOfVaccines++;
+            if (!vaccineAdded) {
+                return false;
+            }
         }
 
-        // Check if any vaccines were loaded.
-        return countOfVaccines > 0;
+
+        return true;
     }
 
-    public void saveAnimalsToBinaryFile(String filePath) throws IOException {
 
-        //Saves the animals to a binary file
-        //Returns true if the animals were saved successfully, false otherwise
+    /**
+     * Loads animals data from a CSV file with the specified format.
+     *  THIS METHOD DOES NOT OVERWRITE THE ANIMAL LIST. IT ADDS TO THE EXISTING LIST.
+     * @param path      The file path to the CSV file containing animals data.
+     * @param delimiter The delimiter used in the CSV file to separate values.
+     * @param fileService The FileService object used to read the file.
+     * @return True if vaccines were loaded successfully, false otherwise.
+     * @throws IOException If an I/O error occurs while reading the file.
+     */
+    public boolean loadAnimalsFromCSVFile(String path,
+                                          String delimiter,
+                                          FileService fileService)
+        throws IOException, NotFoundException {
 
-        File file = new File(filePath);
+        List<Animal> animals = fileService.loadAnimalsFromCSVFile(path, delimiter);
 
-
-        FileOutputStream fos = new FileOutputStream(file);
-        ObjectOutputStream oos = new ObjectOutputStream(fos);
-        for (Animal animal : animalList) {
-            oos.writeObject(animal);
-        }
-
-        oos.close();
-        fos.close();
-
-
+        return animalList.addAll(animals);
     }
+
+
 
     /**
      * Loads animals from a binary file by deserializing objects.
      *
      * @param filePath The path to the binary file containing serialized animal objects.
+     * @param fileService The FileService object used to read the file.
      * @throws IOException            If an I/O error occurs while reading the file.
      * @throws ClassNotFoundException If the class of a serialized object cannot be found.
      */
-    public void loadAnimalsFromBinaryFile(String filePath) throws IOException, ClassNotFoundException {
-        // Create a file object representing the binary file to be read.
-        File file = new File(filePath);
+    public void loadAnimalsFromBinaryFileUsingTheEntireList(String filePath, FileService fileService) throws IOException, ClassNotFoundException {
 
-        // Create a FileInputStream to read from the binary file.
-        FileInputStream fis = new FileInputStream(file);
+        List<Animal> animals =
+            fileService.loadAnimalsFromBinaryFileUsingTheEntireList(filePath);
+        clearAnimalList();
+        animalList.addAll(animals);
 
-        // Create an ObjectInputStream to deserialize objects from the FileInputStream.
-        ObjectInputStream ois = new ObjectInputStream(fis);
-
-        // Clear the existing list of animals to load new ones.
-        this.animalList.clear();
-
-        try {
-            // Continuously read objects from the file until the end is reached (EOFException).
-            while (true) {
-                // Read the next object from the file (an Animal object) and cast it.
-                Animal animal = (Animal) ois.readObject();
-
-                // Add the loaded animal to the animal list.
-                this.animalList.add(animal);
-            }
-        } catch (EOFException e) {
-            // This exception is expected when the end of the file is reached.
-            // It indicates that all objects have been successfully loaded.
-        } finally {
-            // Close the ObjectInputStream and FileInputStream.
-            ois.close();
-            fis.close();
-        }
     }
 
+    private void clearAnimalList() {
+        animalList.clear();
+    }
+
+
     /**
-     * Loads animals from a binary file by deserializing the list of animals.
+     * Saves the list of animals to a binary file.
      *
-     * @param filePath The path to the binary file containing the list of animals.
-     * @throws IOException If an I/O error occurs while reading the file.
-     * @throws ClassNotFoundException If the class of the serialized object cannot be found.
+     * @param filePath The path to the binary file where the list of animals will be saved.
+     * @param fileService The FileService object used to write the file.
+     * @throws IOException If an I/O error occurs while writing the file.
      */
-    public void loadAnimalsFromBinaryFileUsingTheEntireList(String filePath)
-        throws IOException, ClassNotFoundException {
-        // Create a file object representing the binary file to be read.
-        File file = new File(filePath);
+    public void saveAnimalsToBinaryFileUsingTheEntireList(String filePath, FileService fileService) throws IOException {
 
-        // Create a FileInputStream to read from the binary file.
-        FileInputStream fis = new FileInputStream(file);
+        fileService.saveAnimalsToBinaryFileUsingTheEntireList(filePath, animalList);
 
-        // Create an ObjectInputStream to deserialize the list of animals.
-        ObjectInputStream ois = new ObjectInputStream(fis);
-
-        try {
-            // Read the list of animals from the file.
-            @SuppressWarnings("unchecked") // Suppress unchecked cast warning
-            List<Animal> loadedAnimals = (ArrayList<Animal>) ois.readObject();
-
-            // Replace the existing list with the loaded list.
-            this.animalList.clear();
-            this.animalList.addAll(loadedAnimals);
-        } finally {
-            // Close the ObjectInputStream and FileInputStream.
-            ois.close();
-            fis.close();
-        }
     }
 
     /**
      * Saves the list of animals to a binary file.
      *
      * @param filePath The path to the binary file where the list of animals will be saved.
+     * @param fileService The FileService object used to write the file.
      * @throws IOException If an I/O error occurs while writing the file.
      */
-    public void saveAnimalsToBinaryFileUsingTheEntireList(String filePath) throws IOException {
-        // Create a file object representing the binary file to be written.
-        File file = new File(filePath);
+    public void saveAnimalsToCSVFile(String filePath, FileService fileService) throws IOException {
 
-        // Create a FileOutputStream to write to the binary file.
-        FileOutputStream fos = new FileOutputStream(file);
+        List<String> animalsListToCSV = this.animalList.stream()
+            .map(animal -> animal.toCSV(";"))
+            .toList();
 
-        // Create an ObjectOutputStream to serialize the list of animals.
-        ObjectOutputStream oos = new ObjectOutputStream(fos);
+        fileService.writeTextFile(filePath, animalsListToCSV);
 
-        try {
-            // Write the list of animals to the file.
-            oos.writeObject(this.animalList);
-        } finally {
-            // Close the ObjectOutputStream and FileOutputStream.
-            oos.close();
-            fos.close();
-        }
     }
 
+    public UUID addOwnerToAnimal(int animalNumber,
+                                 String userName,
+                                 OwnerService ownerService)
+        throws NotFoundException {
+
+
+        Animal animal = this.animalList.get(animalNumber);
+        UUID ownerId = ownerService.getOwnerByUsername(userName).getId();
+        animal.addOwnerId(ownerId);
+
+        return animal.getId();
+
+    }
+
+    public boolean addAnimalToAppointmentQueue(int animalNumber, AttentionQueueService attentionQueueService) {
+
+        Animal animal = this.animalList.get(animalNumber);
+        if(attentionQueueService.isAnimalInQueue(animal)) {
+            return false;
+        }
+
+        attentionQueueService.addAnimalToAttend(animal);
+        return true;
+
+    }
+
+    public void writeFileWithAnimalsAndNextVaccineApplication(String path, FileService fileService) throws IOException {
+
+            fileService.writeTextFile(path, getAnimalsPendingOnNextApplicationReport());
+
+    }
+
+    public List<String> getAnimalsAndTheirOwnersReport(OwnerService ownerService) {
+
+
+        return animalList.stream()
+            .map(
+                animal -> animal.getName()
+                    + " Owners: " + animal.getOwnerIds().stream()
+                        .map(ownerId -> ownerService.getOwnerById(ownerId).getName())
+                        .collect(Collectors.joining(", ")))
+            .toList();
+        /*
+        List<String> animalsAndTheirOwnersReport = new ArrayList<>();
+        // Iterate through each animal in the animalList.
+        for (Animal animal : animalList) {
+            // Create a report string describing the animal's name and the number of vaccines it has.
+            String animalName = animal.getName();
+            for (UUID ownerId : animal.getOwnerIds()) {
+                String ownerNames +=  ", " ownerService.getOwnerById(ownerId).getName();
+            }
+            String animalReportValue = animalName
+                + " Owners: "
+                + ownerNames;
+
+            // Add the report string to the list.
+            animalsAndTheirOwnersReport.add(animalReportValue);
+        }
+
+        return animalsAndTheirOwnersReport;
+
+         */
+    }
+
+    public void addVaccineToAnimalInQueue(AttentionQueueService attentionQueueService, String brand, int volume) {
+
+            Animal animal = attentionQueueService.attendAnimal();
+            animal.addVaccine(volume, brand);
+    }
 }

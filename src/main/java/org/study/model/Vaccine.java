@@ -2,12 +2,9 @@ package org.study.model;
 
 import java.io.Serializable;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.chrono.ChronoLocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
-import java.util.Locale;
 import java.util.UUID;
 
 public class Vaccine implements Serializable {
@@ -34,6 +31,9 @@ public class Vaccine implements Serializable {
 
     // Constructor 1: Takes four parameters (overloaded)
     public Vaccine(String id, int volumeInMl, String brand, String dateOfApplication) {
+        validateConstructor(id, volumeInMl, brand, dateOfApplication);
+
+
         // Step 1: Parse the given 'id' string into a UUID using UUID.fromString().
         // This method creates a UUID from a string representation.
         this.id = UUID.fromString(id);
@@ -49,9 +49,15 @@ public class Vaccine implements Serializable {
         this.dateOfApplication = LocalDate.parse(dateOfApplication, DATE_FORMAT);
     }
 
+
+
     // Constructor 2: Takes two parameters (overloaded)
     public Vaccine(int volumeInMl, String brand) {
+
+        validateConstructor(volumeInMl, brand);
+
         // Step 1: Set the 'volumeInMl' and 'brand' attributes based on the provided parameters.
+        this.id = UUID.randomUUID();
         this.volumeInMl = volumeInMl;
         this.brand = brand;
 
@@ -60,9 +66,14 @@ public class Vaccine implements Serializable {
         this.dateOfApplication = LocalDate.now();
     }
 
+
+
     // Constructor 3: Takes three parameters (overloaded) and may throw a ParseException
     public Vaccine(int volumeInMl, String brand, String dateOfApplication) throws ParseException {
+        validateConstructor(volumeInMl, brand, dateOfApplication);
+
         // Step 1: Set the 'volumeInMl' and 'brand' attributes based on the provided parameters.
+        this.id = UUID.randomUUID();
         this.volumeInMl = volumeInMl;
         this.brand = brand;
 
@@ -74,12 +85,77 @@ public class Vaccine implements Serializable {
         this.dateOfApplication = LocalDate.parse(dateOfApplication, DATE_FORMAT);
     }
 
+    private void validateConstructor(String id, int volumeInMl, String brand, String dateOfApplication) {
+
+        validateId(id);
+        validateVolumeInMl(volumeInMl);
+        validateBrand(brand);
+        validateDateOfApplication(dateOfApplication);
+
+    }
+
+    private void validateConstructor(int volumeInMl, String brand) {
+        validateVolumeInMl(volumeInMl);
+        validateBrand(brand);
+    }
+
+    private void validateConstructor(int volumeInMl, String brand, String dateOfApplication) {
+        validateVolumeInMl(volumeInMl);
+        validateBrand(brand);
+        validateDateOfApplication(dateOfApplication);
+    }
+
+    private void validateDateOfApplication(String dateOfApplication) {
+
+        //throws IllegalArgumentException if dateOfApplication is null, empty or not in the expected format
+        if(dateOfApplication == null) {
+            throw new IllegalArgumentException("Date of application cannot be null");
+
+        }
+
+        if (dateOfApplication.isEmpty()) {
+            throw new IllegalArgumentException("Date of application cannot be empty");
+        }
+
+        if (!dateOfApplication.matches("\\d{2}/\\d{2}/\\d{4}")) {
+            throw new IllegalArgumentException("Date of application must be in the format dd/MM/yyyy");
+        }
+
+    }
+
+    private void validateBrand(String brand) {
+        if (brand == null ) {
+            throw new IllegalArgumentException("Brand cannot be null");
+        }
+        if(brand.isEmpty()) {
+            throw new IllegalArgumentException("Brand cannot be empty");
+        }
+    }
+
+    private void validateId(String id) {
+
+        if (id == null) {
+            throw new IllegalArgumentException("Id cannot be null");
+        }
+    }
+
+    private void validateVolumeInMl(int volumeInMl) {
+
+        if( volumeInMl < 0) {
+            throw new IllegalArgumentException("Volume in ml cannot be negative or zero");
+        }
+
+    }
+
+
 
     public int getVolumeInMl() {
         return volumeInMl;
     }
 
     public void setVolumeInMl(int volumeInMl) {
+
+        validateVolumeInMl(volumeInMl);
         this.volumeInMl = volumeInMl;
     }
 
@@ -88,6 +164,8 @@ public class Vaccine implements Serializable {
     }
 
     public void setBrand(String brand) {
+
+        validateBrand(brand);
         this.brand = brand;
     }
 

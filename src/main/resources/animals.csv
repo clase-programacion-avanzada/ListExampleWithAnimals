@@ -1,10 +1,10 @@
-d9534b7f-1e70-4b63-a915-4a6a15f44a10;Luna;3
-2e4d587a-907c-4d6e-b072-9b1e6e1ca304;Buddy;5
-f9a4c8ed-48df-42f5-9d2f-7e1276c0ac29;Max;2
-c3a58a3f-8173-4e1e-9f20-8e80c0d6bf43;Coco;4
-7d1d9e7d-289b-4284-b781-6d6a4c1bd8f3;Milo;1
-a6eac6e1-3099-42f7-9c7e-e99b0b1e75e1;Lola;6
-b1254804-8cf5-4c0d-bddc-52b1c6d73c64;Rocky;3
-fe2ab102-564f-42e6-aeef-5f90d7a45017;Toby;5
-93f26c23-0da1-4f5d-95a7-85ac5cbe45b5;Leo;2
-8f82e6b6-0f82-4380-a5fc-65b0d7c06c0b;Anastasio;4
+d9534b7f-1e70-4b63-a915-4a6a15f44a10;Luna;3;{9517b99a-0ecf-4ecb-9ba4-ef35ce2e26d5, b9fb5a18-f7bc-4b86-b4c7-2d121c90a4eb}
+2e4d587a-907c-4d6e-b072-9b1e6e1ca304;Buddy;5;{9517b99a-0ecf-4ecb-9ba4-ef35ce2e26d5, b9fb5a18-f7bc-4b86-b4c7-2d121c90a4eb}
+f9a4c8ed-48df-42f5-9d2f-7e1276c0ac29;Max;2;{9517b99a-0ecf-4ecb-9ba4-ef35ce2e26d5, b9fb5a18-f7bc-4b86-b4c7-2d121c90a4eb}
+c3a58a3f-8173-4e1e-9f20-8e80c0d6bf43;Coco;4;{8993a62c-e20a-4e59-99e1-59acfb208fae}
+7d1d9e7d-289b-4284-b781-6d6a4c1bd8f3;Milo;1;{8993a62c-e20a-4e59-99e1-59acfb208fae}
+a6eac6e1-3099-42f7-9c7e-e99b0b1e75e1;Lola;6;{8993a62c-e20a-4e59-99e1-59acfb208fae}
+b1254804-8cf5-4c0d-bddc-52b1c6d73c64;Rocky;3;{3cb0a88a-8a3f-4fcd-b0c9-5051cde6db44, 8993a62c-e20a-4e59-99e1-59acfb208fae}
+fe2ab102-564f-42e6-aeef-5f90d7a45017;Toby;5;{3cb0a88a-8a3f-4fcd-b0c9-5051cde6db44}
+93f26c23-0da1-4f5d-95a7-85ac5cbe45b5;Leo;2;{3cb0a88a-8a3f-4fcd-b0c9-5051cde6db44}
+8f82e6b6-0f82-4380-a5fc-65b0d7c06c0b;Anastasio;4;{3cb0a88a-8a3f-4fcd-b0c9-5051cde6db44}
