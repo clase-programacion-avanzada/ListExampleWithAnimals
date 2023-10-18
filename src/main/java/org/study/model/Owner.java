@@ -272,7 +272,7 @@ public class Owner implements Serializable {
         }
 
         // Step 3: Check if the provided password is less than 8 characters and includes at least one number and one letter and one special character and one uppercase letter
-        if (password.matches(PASSWORD_PATTERN)) {
+        if (!password.matches(PASSWORD_PATTERN)) {
             throw new IllegalArgumentException(
                 """
                     At least one upper case English letter
